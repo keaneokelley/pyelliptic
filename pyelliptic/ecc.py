@@ -307,7 +307,11 @@ class ECC:
             if (OpenSSL.EC_KEY_set_private_key(own_key, own_priv_key)) == 0:
                 raise Exception("[OpenSSL] EC_KEY_set_private_key FAIL ... " + OpenSSL.get_error())
 
-            OpenSSL.ECDH_set_method(own_key, OpenSSL.ECDH_OpenSSL())
+            if OpenSSL._hexversion > 0x10100000:
+                OpenSSL.EC_KEY_set_method(own_key, OpenSSL.EC_KEY_OpenSSL())
+            else:
+                OpenSSL.ECDH_set_method(own_key, OpenSSL.ECDH_OpenSSL())
+
             ecdh_keylen = OpenSSL.ECDH_compute_key(
                 ecdh_keybuffer, 32, other_pub_key, own_key, 0)
 
@@ -383,7 +387,10 @@ class ECC:
             size = len(inputb)
             buff = OpenSSL.malloc(inputb, size)
             digest = OpenSSL.malloc(0, 64)
-            md_ctx = OpenSSL.EVP_MD_CTX_create()
+            if OpenSSL._hexversion > 0x10100000:
+                md_ctx = OpenSSL.EVP_MD_CTX_new()
+            else:
+                md_ctx = OpenSSL.EVP_MD_CTX_create()
             dgst_len = OpenSSL.pointer(OpenSSL.c_int(0))
             siglen = OpenSSL.pointer(OpenSSL.c_int(0))
             sig = OpenSSL.malloc(0, 151)
@@ -413,7 +420,10 @@ class ECC:
             if (OpenSSL.EC_KEY_check_key(key)) == 0:
                 raise Exception("[OpenSSL] EC_KEY_check_key FAIL ... " + OpenSSL.get_error())
 
-            OpenSSL.EVP_MD_CTX_init(md_ctx)
+            if OpenSSL._hexversion > 0x10100000:
+                OpenSSL.EVP_MD_CTX_new(md_ctx)
+            else:
+                OpenSSL.EVP_MD_CTX_init(md_ctx)
             OpenSSL.EVP_DigestInit_ex(md_ctx, OpenSSL.EVP_sha256(), None)
 
             if (OpenSSL.EVP_DigestUpdate(md_ctx, buff, size)) == 0:
@@ -432,7 +442,10 @@ class ECC:
             OpenSSL.BN_free(pub_key_y)
             OpenSSL.BN_free(priv_key)
             OpenSSL.EC_POINT_free(pub_key)
-            OpenSSL.EVP_MD_CTX_destroy(md_ctx)
+            if OpenSSL._hexversion > 0x10100000:
+                OpenSSL.EVP_MD_CTX_free(md_ctx)
+            else:
+                OpenSSL.EVP_MD_CTX_destroy(md_ctx)
 
     def verify(self, sig, inputb):
         """
@@ -444,7 +457,10 @@ class ECC:
             binputb = OpenSSL.malloc(inputb, len(inputb))
             digest = OpenSSL.malloc(0, 64)
             dgst_len = OpenSSL.pointer(OpenSSL.c_int(0))
-            md_ctx = OpenSSL.EVP_MD_CTX_create()
+            if OpenSSL._hexversion > 0x10100000:
+                md_ctx = OpenSSL.EVP_MD_CTX_new()
+            else:
+                md_ctx = OpenSSL.EVP_MD_CTX_create()
 
             key = OpenSSL.EC_KEY_new_by_curve_name(self.curve)
 
@@ -467,7 +483,10 @@ class ECC:
             if (OpenSSL.EC_KEY_check_key(key)) == 0:
                 raise Exception("[OpenSSL] EC_KEY_check_key FAIL ... " + OpenSSL.get_error())
 
-            OpenSSL.EVP_MD_CTX_init(md_ctx)
+            if OpenSSL._hexversion > 0x10100000:
+                OpenSSL.EVP_MD_CTX_new(md_ctx)
+            else:
+                OpenSSL.EVP_MD_CTX_init(md_ctx)
             OpenSSL.EVP_DigestInit_ex(md_ctx, OpenSSL.EVP_sha256(), None)
             if (OpenSSL.EVP_DigestUpdate(md_ctx, binputb, len(inputb))) == 0:
                 raise Exception("[OpenSSL] EVP_DigestUpdate FAIL ... " + OpenSSL.get_error())
@@ -490,7 +509,10 @@ class ECC:
             OpenSSL.BN_free(pub_key_x)
             OpenSSL.BN_free(pub_key_y)
             OpenSSL.EC_POINT_free(pub_key)
-            OpenSSL.EVP_MD_CTX_destroy(md_ctx)
+            if OpenSSL._hexversion > 0x10100000:
+                OpenSSL.EVP_MD_CTX_free(md_ctx)
+            else:
+                OpenSSL.EVP_MD_CTX_destroy(md_ctx)
 
     def encrypt(self, data, pubkey, ephemcurve=None, ciphername='aes-256-cbc'):
         """
